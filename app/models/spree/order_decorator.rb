@@ -33,6 +33,10 @@ module Spree
 
         self.line_items << current_item
       end
+      # HOTFIX (товар уже добавлен в корзину под логином а мы добавляем такой же но с другими вариантами и без логина то есть создаем новый)
+      # используем стандартный метод - вроде корректно работает потому что нет проверок на ad_hoc опции
+      rescue ActiveRecord::AssociationTypeMismatch
+        self.contents.add(variant, quantity, options)
       current_item
     end
 
@@ -69,7 +73,8 @@ module Spree
           end
         end
         if current_line_item
-          current_line_item.quantity += other_order_line_item.quantity
+          # Иначе при слияние корзины (после входа под логином) кол-во товара некорректное у товара который был в корзине под логином
+          #current_line_item.quantity += other_order_line_item.quantity
           current_line_item.save!
         else
           other_order_line_item.order_id = self.id
